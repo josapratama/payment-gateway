@@ -207,8 +207,8 @@ export default function CheckoutPage({
           {/* Total Amount Box */}
           <div className="bg-slate-950/80 rounded-2xl p-5 border border-slate-800 text-center relative">
             <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Yang Harus Ditransfer</span>
-            <div className="flex items-center justify-center gap-3 my-2">
-              <span className="text-3xl sm:text-4xl font-black text-blue-400 tracking-tight">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 my-2">
+              <span className="text-2xl sm:text-4xl font-black text-blue-400 tracking-tight">
                 Rp {data.totalAmount.toLocaleString("id-ID")}
               </span>
               <button
@@ -261,20 +261,20 @@ export default function CheckoutPage({
                 <span>Instruksi {data.paymentMethod}</span>
               </div>
 
-              <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 flex items-center justify-between">
+              <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="text-[10px] uppercase font-bold text-slate-400">Nomor Rekening / E-Wallet</div>
-                  <div className="text-xl font-mono font-bold text-white tracking-wider mt-0.5">
+                  <div className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider mt-0.5 break-all">
                     {data.paymentAccount?.accountNumber}
                   </div>
                   <div className="text-xs text-slate-400 mt-0.5">a/n {data.paymentAccount?.accountName}</div>
                 </div>
                 <button
                   onClick={() => copyToClipboard(data.paymentAccount?.accountNumber || "", "account")}
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shrink-0"
                 >
                   {copiedField === "account" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedField === "account" ? "Tersalin" : "Salin"}</span>
+                  <span>{copiedField === "account" ? "Tersalin" : "Salin Nomor"}</span>
                 </button>
               </div>
 

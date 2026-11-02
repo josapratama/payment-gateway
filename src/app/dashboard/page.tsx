@@ -294,20 +294,20 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="w-full sm:w-auto flex items-center justify-end gap-2">
             <button
               onClick={() => {
                 setLoading(true);
                 loadData();
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold text-slate-300 transition"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold text-slate-300 transition"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-400" : ""}`} />
               <span>Refresh</span>
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-semibold text-rose-400 transition"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-semibold text-rose-400 transition"
               title="Keluar dari sesi administrator"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -483,7 +483,7 @@ export default function DashboardPage() {
         {activeTab === "transactions" && (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[720px]">
                 <thead className="bg-slate-950/60 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
                   <tr>
                     <th className="p-4">ID Transaksi / Waktu</th>
@@ -560,7 +560,7 @@ export default function DashboardPage() {
         {activeTab === "mutations" && (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[640px]">
                 <thead className="bg-slate-950/60 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
                   <tr>
                     <th className="p-4">Waktu</th>
