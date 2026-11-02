@@ -64,6 +64,8 @@ export default function CheckoutPage({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>("--:--:--");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
 
   // Multi-method accounts state
   const [allAccounts, setAllAccounts] = useState<PaymentAccount[]>([]);
@@ -122,6 +124,26 @@ export default function CheckoutPage({
 
     return () => clearInterval(interval);
   }, [txId, isSuccess]);
+
+  // Auto-redirect countdown when settled
+  useEffect(() => {
+    if ((isSuccess || data?.status === "SETTLED") && data?.metadata?.returnUrl) {
+      const interval = setInterval(() => {
+        setRedirectCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            if (data?.metadata?.returnUrl) {
+              window.location.href = data.metadata.returnUrl;
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isSuccess, data?.status, data?.metadata?.returnUrl]);
 
   // Countdown Timer
   useEffect(() => {
@@ -209,13 +231,18 @@ export default function CheckoutPage({
           </div>
 
           {data.metadata?.returnUrl ? (
-            <a
-              href={data.metadata.returnUrl}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
-            >
-              <span>Lanjut Belajar di {data.project.name}</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
+            <div className="space-y-2">
+              <a
+                href={data.metadata.returnUrl}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+              >
+                <span>Lanjut Belajar di {data.project.name}</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <p className="text-[11px] text-slate-400">
+                Otomatis mengalihkan dalam <strong className="text-emerald-400">{redirectCountdown} detik</strong>...
+              </p>
+            </div>
           ) : (
             <button
               onClick={() => window.close()}
@@ -495,10 +522,24 @@ export default function CheckoutPage({
             </div>
           )}
 
-          {/* Status Live Indicator */}
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-400 pt-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>Menunggu pembayaran masuk... Halaman akan otomatis berpindah saat lunas.</span>
+          {/* Status Live Indicator & Manual Check */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-800">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+              <span>Menunggu mutasi... Auto-cek tiap 3 detik.</span>
+            </div>
+            <button
+              onClick={async () => {
+                setChecking(true);
+                await fetchStatus();
+                setTimeout(() => setChecking(false), 600);
+              }}
+              disabled={checking}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${checking ? "animate-spin text-blue-400" : ""}`} />
+              <span>{checking ? "Memeriksa..." : "Cek Status Sekarang"}</span>
+            </button>
           </div>
 
         </div>

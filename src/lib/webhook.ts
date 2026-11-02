@@ -26,9 +26,13 @@ export function generateWebhookSignature(payload: string, secret: string): strin
 }
 
 /**
- * Dispatch webhook to project webhookUrl
+ * Dispatch webhook to project webhookUrl with automatic retry
  */
-export async function dispatchWebhook(transactionId: string, event: "payment.settled" | "payment.expired" | "payment.cancelled") {
+export async function dispatchWebhook(
+  transactionId: string,
+  event: "payment.settled" | "payment.expired" | "payment.cancelled",
+  maxRetries = 3
+) {
   const trx = await prisma.transaction.findUnique({
     where: { id: transactionId },
     include: { project: true },
@@ -56,45 +60,53 @@ export async function dispatchWebhook(transactionId: string, event: "payment.set
   const payloadString = JSON.stringify(payload);
   const signature = generateWebhookSignature(payloadString, trx.project.webhookSecret);
 
-  try {
-    const res = await fetch(trx.project.webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-payment-signature": signature,
-        "x-payment-event": event,
-      },
-      body: payloadString,
-      signal: AbortSignal.timeout(10000), // 10s timeout
-    });
+  let attempts = 0;
+  let isSuccess = false;
+  let responseStatus = 500;
+  let responseBody = "";
 
-    const body = await res.text();
+  while (attempts < maxRetries && !isSuccess) {
+    attempts++;
+    try {
+      const res = await fetch(trx.project.webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-payment-signature": signature,
+          "x-payment-event": event,
+        },
+        body: payloadString,
+        signal: AbortSignal.timeout(10000), // 10s timeout
+      });
 
-    await prisma.webhookLog.create({
-      data: {
-        projectId: trx.projectId,
-        transactionId: trx.id,
-        event,
-        url: trx.project.webhookUrl,
-        payload: payloadString,
-        responseStatus: res.status,
-        responseBody: body.slice(0, 1000),
-        isSuccess: res.ok,
-      },
-    });
-  } catch (err: any) {
-    await prisma.webhookLog.create({
-      data: {
-        projectId: trx.projectId,
-        transactionId: trx.id,
-        event,
-        url: trx.project.webhookUrl,
-        payload: payloadString,
-        responseStatus: 500,
-        responseBody: err.message || "Connection failed",
-        isSuccess: false,
-      },
-    });
+      responseStatus = res.status;
+      responseBody = await res.text();
+      if (res.ok) {
+        isSuccess = true;
+      } else if (attempts < maxRetries) {
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    } catch (err: any) {
+      responseStatus = 500;
+      responseBody = err.message || "Connection failed";
+      if (attempts < maxRetries) {
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    }
   }
+
+  await prisma.webhookLog.create({
+    data: {
+      projectId: trx.projectId,
+      transactionId: trx.id,
+      event,
+      url: trx.project.webhookUrl,
+      payload: payloadString,
+      responseStatus,
+      responseBody: responseBody.slice(0, 1000),
+      isSuccess,
+      attempts,
+    },
+  });
 }
 
