@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  payment-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payment-gateway
+    restart: always
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - APP_URL=https://pay.josapratama.com
+      - DATABASE_URL=file:./dev.db
+      - ADMIN_KEY=pay-admin-secret-2026
+    volumes:
+      - payment-data:/app/prisma
+
+volumes:
+  payment-data:
