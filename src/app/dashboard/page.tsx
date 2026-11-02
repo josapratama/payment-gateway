@@ -17,6 +17,10 @@ import {
   Shield,
   Code2,
   Search,
+  Edit2,
+  Save,
+  X,
+  CreditCard,
 } from "lucide-react";
 
 interface Stats {
@@ -24,6 +28,18 @@ interface Stats {
   settledCount: number;
   pendingCount: number;
   mutationsCount: number;
+}
+
+interface PaymentAccount {
+  id: string;
+  type: string;
+  provider: string;
+  accountName: string;
+  accountNumber: string;
+  qrisContent?: string | null;
+  instructions?: string | null;
+  isActive: boolean;
+  isDefault: boolean;
 }
 
 export default function DashboardPage() {
@@ -35,7 +51,8 @@ export default function DashboardPage() {
   });
   const [transactions, setTransactions] = useState<any[]>([]);
   const [mutations, setMutations] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"transactions" | "mutations" | "api">("transactions");
+  const [accounts, setAccounts] = useState<PaymentAccount[]>([]);
+  const [activeTab, setActiveTab] = useState<"transactions" | "mutations" | "accounts" | "api">("transactions");
   const [loading, setLoading] = useState(true);
 
   // Quick Simulation Form
@@ -45,19 +62,25 @@ export default function DashboardPage() {
   const [simResult, setSimResult] = useState<string | null>(null);
   const [simLoading, setSimLoading] = useState(false);
 
+  // Edit Account State
+  const [editingAccount, setEditingAccount] = useState<PaymentAccount | null>(null);
+  const [saveLoading, setSaveLoading] = useState(false);
+
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
-      const [txRes, mutRes] = await Promise.all([
+      const [txRes, mutRes, accRes] = await Promise.all([
         fetch("/api/admin/transactions"),
         fetch("/api/v1/mutations", {
           headers: { "x-admin-key": "pay-admin-secret-2026" },
         }),
+        fetch("/api/admin/accounts"),
       ]);
 
       const txJson = await txRes.json();
       const mutJson = await mutRes.json();
+      const accJson = await accRes.json();
 
       if (txJson.success) {
         setTransactions(txJson.data);
@@ -79,6 +102,10 @@ export default function DashboardPage() {
           ...prev,
           mutationsCount: mutJson.data.length,
         }));
+      }
+
+      if (accJson.success) {
+        setAccounts(accJson.data);
       }
     } catch (e) {
       console.error(e);
@@ -127,6 +154,32 @@ export default function DashboardPage() {
       setSimResult(`Error: ${e.message}`);
     } finally {
       setSimLoading(false);
+    }
+  };
+
+  const handleSaveAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAccount) return;
+
+    setSaveLoading(true);
+    try {
+      const res = await fetch("/api/admin/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingAccount),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setEditingAccount(null);
+        loadData();
+      } else {
+        alert(json.message || "Gagal menyimpan akun");
+      }
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -279,10 +332,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800 gap-6">
+        <div className="flex border-b border-slate-800 gap-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab("transactions")}
-            className={`pb-3 text-sm font-bold border-b-2 transition ${
+            className={`pb-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
               activeTab === "transactions"
                 ? "border-blue-500 text-blue-400"
                 : "border-transparent text-slate-400 hover:text-white"
@@ -292,7 +345,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab("mutations")}
-            className={`pb-3 text-sm font-bold border-b-2 transition ${
+            className={`pb-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
               activeTab === "mutations"
                 ? "border-blue-500 text-blue-400"
                 : "border-transparent text-slate-400 hover:text-white"
@@ -301,14 +354,24 @@ export default function DashboardPage() {
             Riwayat Mutasi Bank ({mutations.length})
           </button>
           <button
+            onClick={() => setActiveTab("accounts")}
+            className={`pb-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
+              activeTab === "accounts"
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-slate-400 hover:text-white"
+            }`}
+          >
+            ⚙️ Rekening & E-Wallet Tujuan ({accounts.length})
+          </button>
+          <button
             onClick={() => setActiveTab("api")}
-            className={`pb-3 text-sm font-bold border-b-2 transition ${
+            className={`pb-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
               activeTab === "api"
                 ? "border-blue-500 text-blue-400"
                 : "border-transparent text-slate-400 hover:text-white"
             }`}
           >
-            Panduan Integrasi API (Learnify / VPS / WhatsApp)
+            Panduan Integrasi API
           </button>
         </div>
 
@@ -438,7 +501,74 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Tab 3: API Guide */}
+        {/* Tab 3: Payment Accounts Management */}
+        {activeTab === "accounts" && (
+          <div className="space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-blue-400" />
+                    <span>Rekening & E-Wallet Tujuan Transfer</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Uang yang ditransfer oleh pembeli akan <strong>100% langsung masuk ke rekening / nomor HP yang Anda cantumkan di bawah ini</strong>. Klik &quot;Edit&quot; untuk mengganti dengan nomor asli Anda.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {accounts.map((acc) => (
+                  <div key={acc.id} className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-sm text-white flex items-center gap-2">
+                          {acc.type === "QRIS" ? (
+                            <QrCode className="w-4 h-4 text-blue-400" />
+                          ) : acc.type === "EWALLET" ? (
+                            <Wallet className="w-4 h-4 text-indigo-400" />
+                          ) : (
+                            <Building2 className="w-4 h-4 text-emerald-400" />
+                          )}
+                          <span>{acc.provider}</span>
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${acc.isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-800 text-slate-500"}`}>
+                          {acc.isActive ? "Aktif" : "Nonaktif"}
+                        </span>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="text-[10px] font-bold uppercase text-slate-500">
+                          {acc.type === "QRIS" ? "ID Merchant QRIS" : "Nomor Rekening / No HP"}
+                        </div>
+                        <div className="text-lg font-mono font-bold text-blue-400 mt-0.5">
+                          {acc.accountNumber}
+                        </div>
+                        <div className="text-xs text-slate-300 mt-1">a/n {acc.accountName}</div>
+                      </div>
+
+                      {acc.instructions && (
+                        <p className="text-[11px] text-slate-500 mt-3 line-clamp-2">
+                          {acc.instructions}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setEditingAccount(acc)}
+                      className="mt-5 w-full bg-slate-900 hover:bg-slate-800 text-xs py-2 rounded-xl text-slate-200 font-semibold border border-slate-800 flex items-center justify-center gap-1.5 transition"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Ubah Rekening Ini</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: API Guide */}
         {activeTab === "api" && (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
             <div>
@@ -493,7 +623,7 @@ export default function DashboardPage() {
 
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto">
                 <pre>{`// Panggil dari Learnify saat Siswa Checkout Kursus:
-const res = await fetch("http://localhost:3005/api/v1/transactions/create", {
+const res = await fetch("https://pay.josapratama.com/api/v1/transactions/create", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -519,6 +649,112 @@ window.location.href = data.data.checkoutUrl;`}</pre>
         )}
 
       </div>
+
+      {/* Edit Account Modal */}
+      {editingAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button
+              onClick={() => setEditingAccount(null)}
+              className="absolute right-5 top-5 p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
+              <span>Ubah Informasi {editingAccount.provider}</span>
+            </h3>
+            <p className="text-xs text-slate-400 mb-5">
+              Ubah nomor rekening atau nomor DANA tujuan agar uang transfer siswa langsung masuk ke akun asli Anda.
+            </p>
+
+            <form onSubmit={handleSaveAccount} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Nama Pemilik Rekening / Akun (a/n):
+                </label>
+                <input
+                  type="text"
+                  value={editingAccount.accountName}
+                  onChange={(e) =>
+                    setEditingAccount({ ...editingAccount, accountName: e.target.value })
+                  }
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  {editingAccount.type === "QRIS" ? "ID Merchant QRIS:" : "Nomor Rekening / Nomor HP DANA / GoPay:"}
+                </label>
+                <input
+                  type="text"
+                  value={editingAccount.accountNumber}
+                  onChange={(e) =>
+                    setEditingAccount({ ...editingAccount, accountNumber: e.target.value })
+                  }
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-mono text-blue-400 font-bold focus:outline-none focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {editingAccount.type === "QRIS" && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    String Kode QRIS Statis Toko Anda:
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editingAccount.qrisContent || ""}
+                    onChange={(e) =>
+                      setEditingAccount({ ...editingAccount, qrisContent: e.target.value })
+                    }
+                    placeholder="Contoh: 00020101021126590014..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Dapatkan string ini dengan cara scan QRIS toko Anda menggunakan aplikasi pembaca QR biasa.
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Petunjuk / Instruksi Transfer untuk Pembeli:
+                </label>
+                <textarea
+                  rows={2}
+                  value={editingAccount.instructions || ""}
+                  onChange={(e) =>
+                    setEditingAccount({ ...editingAccount, instructions: e.target.value })
+                  }
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingAccount(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveLoading}
+                  className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                >
+                  {saveLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

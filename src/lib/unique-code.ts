@@ -47,3 +47,4 @@ export async function generateUniqueCode(baseAmount: number): Promise<{
     totalAmount: baseAmount + code,
   };
 }
+

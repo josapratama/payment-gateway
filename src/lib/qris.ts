@@ -77,3 +77,4 @@ export async function generateQRImage(qrisString: string): Promise<string> {
     },
   });
 }
+

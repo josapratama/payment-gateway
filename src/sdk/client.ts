@@ -70,3 +70,4 @@ export class PayGatewayClient {
     return json.data;
   }
 }
+
