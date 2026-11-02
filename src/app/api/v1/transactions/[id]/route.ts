@@ -60,6 +60,7 @@ export async function GET(
         customerName: transaction.customerName,
         customerEmail: transaction.customerEmail,
         description: transaction.description,
+        metadata: transaction.metadata ? JSON.parse(transaction.metadata) : null,
         createdAt: transaction.createdAt,
         expiresAt: transaction.expiresAt,
         settledAt: transaction.settledAt,

@@ -33,6 +33,7 @@ interface PaymentDetails {
   status: "PENDING" | "SETTLED" | "EXPIRED" | "CANCELLED";
   customerName?: string | null;
   description?: string | null;
+  metadata?: any;
   expiresAt: string;
   settledAt?: string | null;
 }
@@ -168,13 +169,23 @@ export default function CheckoutPage({
             </div>
           </div>
 
-          <button
-            onClick={() => window.close()}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2"
-          >
-            <span>Tutup Jendela Ini</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {data.metadata?.returnUrl ? (
+            <a
+              href={data.metadata.returnUrl}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+            >
+              <span>Lanjut Belajar di {data.project.name}</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          ) : (
+            <button
+              onClick={() => window.close()}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2"
+            >
+              <span>Tutup Jendela Ini</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     );
