@@ -75,9 +75,20 @@ export default function CheckoutPage({
   const fetchStatus = async () => {
     try {
       const res = await fetch(`/api/v1/transactions/${txId}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setError("Invoice tidak ditemukan atau link sudah tidak berlaku.");
+        }
+        return;
+      }
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        return;
+      }
       const json = await res.json();
       if (json.success && json.data) {
         setData(json.data);
+        setError(null);
         if (json.data.status === "SETTLED") {
           setIsSuccess(true);
         }
@@ -85,7 +96,10 @@ export default function CheckoutPage({
         setError(json.message || "Transaksi tidak ditemukan");
       }
     } catch (e: any) {
-      setError(e.message);
+      console.warn("Gagal polling status transaksi:", e);
+      if (!data) {
+        setError("Sedang menghubungkan ke server invoice...");
+      }
     } finally {
       setLoading(false);
     }
@@ -94,9 +108,14 @@ export default function CheckoutPage({
   // Fetch available accounts
   useEffect(() => {
     fetch("/api/v1/payment-methods")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) return null;
+        const ct = r.headers.get("content-type");
+        if (!ct || !ct.includes("application/json")) return null;
+        return r.json();
+      })
       .then((res) => {
-        if (res.success && Array.isArray(res.data)) {
+        if (res && res.success && Array.isArray(res.data)) {
           setAllAccounts(res.data);
           const hasDana = res.data.find((a: PaymentAccount) => a.provider === "DANA");
           if (hasDana) {
@@ -110,7 +129,7 @@ export default function CheckoutPage({
           }
         }
       })
-      .catch(console.error);
+      .catch((e) => console.warn("Gagal memuat metode pembayaran:", e));
   }, []);
 
   useEffect(() => {
@@ -191,13 +210,24 @@ export default function CheckoutPage({
     );
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
           <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Invoice Tidak Ditemukan</h2>
-          <p className="text-slate-400 text-sm">{error || "Silakan periksa kembali link invoice Anda."}</p>
+          <p className="text-slate-400 text-sm mb-6">{error || "Silakan periksa kembali link invoice Anda."}</p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              fetchStatus();
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-600/30"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Coba Muat Ulang</span>
+          </button>
         </div>
       </div>
     );
