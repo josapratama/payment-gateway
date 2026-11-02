@@ -287,9 +287,13 @@ export default function CheckoutPage({
     );
   }
 
-  // Find active accounts by category
-  const ewalletAccounts = allAccounts.filter((a) => a.type === "EWALLET");
-  const bankAccounts = allAccounts.filter((a) => a.type === "BANK_TRANSFER");
+  // Find active accounts by category (deduplicated by provider)
+  const ewalletAccounts = allAccounts
+    .filter((a) => a.type === "EWALLET")
+    .filter((acc, idx, arr) => arr.findIndex((x) => x.provider === acc.provider) === idx);
+  const bankAccounts = allAccounts
+    .filter((a) => a.type === "BANK_TRANSFER")
+    .filter((acc, idx, arr) => arr.findIndex((x) => x.provider === acc.provider) === idx);
   const qrisAccount = allAccounts.find((a) => a.type === "QRIS");
 
   // Get current active payment account to display
