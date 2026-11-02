@@ -8,12 +8,12 @@ services:
     container_name: payment-gateway
     restart: always
     ports:
-      - "3005:3005"
+      - "17550:3005"
     environment:
       - NODE_ENV=production
       - PORT=3005
       - APP_URL=https://pay.josapratama.com
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=file:/app/prisma/dev.db
       - ADMIN_KEY=pay-admin-secret-2026
     volumes:
       - payment-data:/app/prisma

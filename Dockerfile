@@ -35,6 +35,8 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
+RUN chown -R nextjs:nodejs /app && chmod -R 777 /app/prisma
+
 USER nextjs
 
 EXPOSE 3005
