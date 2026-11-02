@@ -68,17 +68,19 @@ async function main() {
       type: "EWALLET",
       provider: "DANA",
       accountName: "Josa Pratama",
-      accountNumber: "081234567890",
+      accountNumber: "081291561139",
       instructions: "Buka aplikasi DANA -> Kirim -> Masukkan nomor DANA di atas -> Transfer dengan nominal PERSIS.",
       isDefault: true,
+      isActive: true,
     },
     {
       type: "EWALLET",
       provider: "GOPAY",
       accountName: "Josa Pratama",
-      accountNumber: "081234567890",
+      accountNumber: "081291561139",
       instructions: "Buka aplikasi Gojek / GoPay -> Bayar / Kirim -> Masukkan nomor GoPay di atas -> Transfer dengan nominal PERSIS.",
       isDefault: false,
+      isActive: true,
     },
     {
       type: "QRIS",
@@ -87,7 +89,8 @@ async function main() {
       accountNumber: "ID1020021345678",
       qrisContent: "00020101021126590014ID.LINKAJA.WWW01189360091100223344550215ID10200213456780303UMI51440014ID.CO.QRIS.WWW0215ID10200213456780303UMI5204541153033605802ID5918Josa Pratama Store6007Bandung61054011562070703A0163047B8C",
       instructions: "Scan QR Code QRIS menggunakan BCA, Mandiri, BRI, DANA, GoPay, OVO, ShopeePay, atau Bank apa saja. Nominal sudah otomatis terkunci.",
-      isDefault: true,
+      isDefault: false,
+      isActive: false,
     },
   ];
 
