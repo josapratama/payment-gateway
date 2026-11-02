@@ -27,6 +27,7 @@ import {
   Layers,
   Globe,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 
 interface Stats {
@@ -168,6 +169,14 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
   const handleSimulateMutation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!simAmount) return;
@@ -295,6 +304,14 @@ export default function DashboardPage() {
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-400" : ""}`} />
               <span>Refresh</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-semibold text-rose-400 transition"
+              title="Keluar dari sesi administrator"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Logout</span>
             </button>
           </div>
         </div>

@@ -101,6 +101,28 @@ async function main() {
   }
   console.log("✅ Seeded 6 Payment Accounts (BCA, Mandiri, BRI, DANA, GoPay, QRIS)");
 
+  // 3. Seed Super Admin User
+  const crypto = require("crypto");
+  function hashPassword(password) {
+    const salt = crypto.randomBytes(16).toString("hex");
+    const derivedKey = crypto.scryptSync(password, salt, 64);
+    return `${salt}:${derivedKey.toString("hex")}`;
+  }
+
+  const existingAdmin = await prisma.adminUser.findFirst();
+  if (!existingAdmin) {
+    await prisma.adminUser.create({
+      data: {
+        username: "admin",
+        email: "admin@josapratama.com",
+        password: hashPassword("admin12345"),
+        name: "Josa Pratama",
+        role: "ADMIN",
+      },
+    });
+    console.log("✅ Seeded Admin User: username 'admin', password 'admin12345'");
+  }
+
   console.log("✨ Seeding completed successfully!");
 }
 

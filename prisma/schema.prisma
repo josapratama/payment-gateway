@@ -8,6 +8,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String?  @unique
+  password  String   // Hashed password
+  name      String   @default("Super Admin")
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Project {
   id            String        @id @default(cuid())
   name          String
