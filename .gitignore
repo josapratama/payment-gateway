@@ -39,3 +39,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.db
+venv/
+.venv/
+
+# Flutter / Dart
+.dart_tool/
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+apps/mobile-forwarder/build/
+apps/mobile-forwarder/.dart_tool/
+apps/mobile-forwarder/.idea/

@@ -15,8 +15,27 @@ services:
       - APP_URL=https://pay.josapratama.com
       - DATABASE_URL=file:/app/prisma/dev.db
       - ADMIN_KEY=pay-admin-secret-2026
+      - QRIS_ENGINE_URL=http://qris-engine:8082
     volumes:
       - payment-data:/app/prisma
+    depends_on:
+      - qris-engine
+
+  qris-engine:
+    build:
+      context: ./services/qris-engine
+      dockerfile: Dockerfile
+    container_name: qris-engine
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8082
+      - DATABASE_URL=sqlite+aiosqlite:///./data/qris.db
+    volumes:
+      - qris-data:/app/data
 
 volumes:
   payment-data:
+  qris-data:

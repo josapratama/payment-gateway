@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QRIS Engine — Generator Dinamis & Verifikator Mutasi Mandiri</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-blue-500/20">
+          ⚡
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base tracking-tight text-white">QRIS Engine</h1>
+            <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+              0% Fee Mandiri
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Generator QRIS Dinamis & Auto-Verifikasi Mutasi</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl text-xs font-medium">
+        <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn active px-3.5 py-1.5 rounded-lg border border-transparent transition-all flex items-center gap-1.5">
+          <span>🛍️</span> <span>Kasir POS</span>
+        </button>
+        <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3.5 py-1.5 rounded-lg border border-transparent transition-all flex items-center gap-1.5">
+          <span>🔍</span> <span>QRIS Studio</span>
+        </button>
+        <button onclick="switchTab('invoices')" id="tab-invoices" class="tab-btn px-3.5 py-1.5 rounded-lg border border-transparent transition-all flex items-center gap-1.5">
+          <span>🧾</span> <span>Invoice</span>
+        </button>
+        <button onclick="switchTab('mutations')" id="tab-mutations" class="tab-btn px-3.5 py-1.5 rounded-lg border border-transparent transition-all flex items-center gap-1.5">
+          <span>🏦</span> <span>Log Mutasi</span>
+        </button>
+        <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-3.5 py-1.5 rounded-lg border border-transparent transition-all flex items-center gap-1.5">
+          <span>⚙️</span> <span>Pengaturan</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 1: KASIR POS & DYNAMIC QRIS GENERATOR -->
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <section id="section-pos" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Form Buat Tagihan (Left Column) -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-6 space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-wide">Buat Tagihan QRIS Baru</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Kunci nominal eksak dengan 3-digit kode unik otomatis</p>
+            </div>
+            <span class="text-xl">💳</span>
+          </div>
+
+          <!-- Nominal Input -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wide mb-1.5">
+              Nominal Tagihan (Rp) <span class="text-rose-400">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+              <input
+                type="number"
+                id="pos-amount"
+                placeholder="misal: 50000"
+                class="glass-input w-full pl-11 pr-3.5 py-2.5 rounded-xl font-mono text-base font-semibold text-white"
+                min="1000"
+                step="1000"
+              />
+            </div>
+            <!-- Quick amount buttons -->
+            <div class="grid grid-cols-4 gap-2 mt-2 text-xs">
+              <button type="button" onclick="setPosAmount(10000)" class="py-1 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-mono transition-colors">10k</button>
+              <button type="button" onclick="setPosAmount(25000)" class="py-1 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-mono transition-colors">25k</button>
+              <button type="button" onclick="setPosAmount(50000)" class="py-1 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-mono transition-colors">50k</button>
+              <button type="button" onclick="setPosAmount(100000)" class="py-1 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-mono transition-colors">100k</button>
+            </div>
+          </div>
+
+          <!-- Customer Info -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Nama Pembeli (Opsional)</label>
+              <input type="text" id="pos-customer" placeholder="misal: Budi Santoso" class="glass-input w-full px-3 py-2 rounded-xl text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Catatan / No. Meja</label>
+              <input type="text" id="pos-memo" placeholder="misal: Order Kopi Meja 3" class="glass-input w-full px-3 py-2 rounded-xl text-xs" />
+            </div>
+          </div>
+
+          <!-- Toggle Unique Code -->
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+            <div>
+              <span class="font-semibold text-white block">Gunakan 3-Digit Kode Unik</span>
+              <span class="text-slate-400 text-[11px]">Memudahkan verifikasi otomatis saat transfer</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="pos-use-unique" checked class="sr-only peer" />
+              <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="button"
+            onclick="generatePosInvoice()"
+            id="btn-generate-invoice"
+            class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all"
+          >
+            <span>⚡ Buat QRIS Pembayaran</span>
+          </button>
+        </div>
+
+        <!-- QR Display Card (Right Column) -->
+        <div class="lg:col-span-7">
+          <div id="qr-container-empty" class="glass-card rounded-2xl p-12 text-center text-slate-500 space-y-3">
+            <div class="w-16 h-16 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-3xl mx-auto text-slate-400">
+              📱
+            </div>
+            <h3 class="text-sm font-semibold text-slate-300">Belum Ada Tagihan Aktif</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              Masukkan nominal di sebelah kiri dan klik tombol <b>Buat QRIS Pembayaran</b> untuk menampilkan kode QR interaktif.
+            </p>
+          </div>
+
+          <!-- Active QR Card (Hidden by default) -->
+          <div id="qr-container-active" class="hidden glass-card-glow rounded-3xl p-6 sm:p-8 space-y-6 transition-all duration-300">
+            <!-- Header Status -->
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+              <div>
+                <span id="active-invoice-id" class="text-xs font-mono font-bold text-blue-400">INV-261108-XXXX</span>
+                <h3 id="active-merchant-name" class="text-base font-bold text-white mt-0.5">Nama Merchant Toko</h3>
+              </div>
+              <div id="badge-status-container">
+                <span id="badge-status" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                  <span>Menunggu Pembayaran</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- QR & Nominal Showcase -->
+            <div class="flex flex-col sm:flex-row items-center gap-8 justify-center py-2">
+              <!-- QR Code Box -->
+              <div class="bg-white p-3.5 rounded-2xl shadow-2xl flex flex-col items-center shrink-0">
+                <img id="active-qr-img" src="" alt="Dynamic QRIS" class="w-56 h-56 object-contain" />
+                <span class="text-[10px] font-mono text-slate-500 mt-1 uppercase font-bold tracking-wider">NMID / QRIS Standar ASPI</span>
+              </div>
+
+              <!-- Payment Details -->
+              <div class="space-y-4 text-center sm:text-left flex-1 min-w-0">
+                <div>
+                  <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold block">Total Harus Ditransfer</span>
+                  <div class="text-3xl sm:text-4xl font-extrabold text-white font-mono mt-1 tracking-tight">
+                    Rp <span id="active-total-amount">0</span>
+                  </div>
+                  <p id="active-unique-note" class="text-xs text-blue-300 mt-1">
+                    *Termasuk kode unik verifikasi: <b id="active-unique-digits" class="font-mono text-emerald-400">000</b>
+                  </p>
+                </div>
+
+                <!-- Expiry Countdown -->
+                <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs flex items-center justify-between sm:justify-start gap-3">
+                  <span class="text-slate-400">Batas Waktu Bayar:</span>
+                  <span id="active-countdown" class="font-mono font-bold text-amber-400 text-sm">14:59</span>
+                </div>
+
+                <!-- Simulator Button for Instant Test -->
+                <div class="pt-1">
+                  <button
+                    type="button"
+                    onclick="simulatePaymentForActive()"
+                    class="w-full py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>🧪 Uji Pembayaran Instan (Simulasi)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2">
+                <button onclick="downloadQrPng()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                  ⬇️ Unduh PNG
+                </button>
+                <button onclick="copyQrisString()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                  📋 Salin String QRIS
+                </button>
+              </div>
+              <button onclick="cancelActiveInvoice()" class="px-3 py-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors">
+                Batal / Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 2: QRIS INSPECTOR & CONVERTER STUDIO -->
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <section id="section-studio" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 space-y-4">
+        <div>
+          <h2 class="text-sm font-bold text-white tracking-wide">EMVCo QRIS Parser & Tag Inspector</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Tempelkan payload QRIS statis dari bank mana pun untuk membedah seluruh komponen tag TLV dan mengujinya.</p>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-300">String Payload QRIS (Mulai dari 000201...):</label>
+          <textarea
+            id="studio-raw-input"
+            rows="3"
+            placeholder="00020101021126610014ID.LINKAJA.WWW..."
+            class="glass-input w-full p-3 rounded-xl font-mono text-xs"
+          ></textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            onclick="inspectStudioQris()"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20"
+          >
+            🔍 Analisis & Bedah Tag
+          </button>
+          <button
+            type="button"
+            onclick="loadSampleQris()"
+            class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition-colors"
+          >
+            Gunakan Contoh QRIS
+          </button>
+        </div>
+
+        <!-- Hasil Analisis Inspector -->
+        <div id="studio-results" class="hidden space-y-4 pt-4 border-t border-slate-800">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <span class="text-slate-400 block text-[10px] uppercase">Merchant Name:</span>
+              <span id="inspect-merchant" class="font-bold text-white text-sm"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <span class="text-slate-400 block text-[10px] uppercase">Kota & Negara:</span>
+              <span id="inspect-city" class="font-semibold text-slate-200"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <span class="text-slate-400 block text-[10px] uppercase">Tipe & Status CRC:</span>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="inspect-type" class="px-2 py-0.5 rounded font-bold text-[10px]"></span>
+                <span id="inspect-crc" class="px-2 py-0.5 rounded font-mono text-[10px]"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tree View Tag TLV -->
+          <div>
+            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wide mb-2">Struktur Tag TLV Standar EMVCo:</h4>
+            <div id="inspect-tree" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 font-mono text-xs max-h-72 overflow-y-auto space-y-1.5">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 3: INVOICE HISTORY -->
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <section id="section-invoices" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">Daftar Tagihan & Invoice</h2>
+          <p class="text-xs text-slate-400">Riwayat transaksi dan status pembayaran real-time</p>
+        </div>
+        <button onclick="loadInvoicesTable()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-colors">
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div class="glass-card rounded-2xl overflow-hidden border border-slate-800">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
+              <tr>
+                <th class="py-3 px-4">Invoice ID</th>
+                <th class="py-3 px-4">Pembeli / Memo</th>
+                <th class="py-3 px-4">Nominal Tagihan</th>
+                <th class="py-3 px-4">Kode Unik</th>
+                <th class="py-3 px-4">Total Bayar</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Waktu Dibuat</th>
+                <th class="py-3 px-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="invoices-tbody" class="divide-y divide-slate-800/60 font-mono">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-slate-500 font-sans">Memuat daftar invoice...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 4: MUTATION LOG -->
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <section id="section-mutations" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">Log Mutasi Rekening Masuk</h2>
+          <p class="text-xs text-slate-400">Notifikasi kredit dari bank / e-wallet yang diterima via webhook</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="simulateCustomMutationPrompt()" class="px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-semibold transition-colors">
+            + Simulasi Mutasi Masuk
+          </button>
+          <button onclick="loadMutationsTable()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-colors">
+            🔄 Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl overflow-hidden border border-slate-800">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
+              <tr>
+                <th class="py-3 px-4">ID</th>
+                <th class="py-3 px-4">Bank / Provider</th>
+                <th class="py-3 px-4">Tipe</th>
+                <th class="py-3 px-4">Nominal</th>
+                <th class="py-3 px-4">Keterangan</th>
+                <th class="py-3 px-4">Status Pencocokan</th>
+                <th class="py-3 px-4">Waktu Masuk</th>
+              </tr>
+            </thead>
+            <tbody id="mutations-tbody" class="divide-y divide-slate-800/60 font-mono">
+              <tr>
+                <td colspan="7" class="text-center py-8 text-slate-500 font-sans">Memuat riwayat mutasi...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 5: PENGATURAN MERCHANT & DOKUMENTASI API -->
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <section id="section-settings" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Form Pengaturan -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h2 class="text-sm font-bold text-white tracking-wide border-b border-slate-800 pb-3">
+            Konfigurasi Merchant QRIS
+          </h2>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">
+              Master Static QRIS Payload (Milik Anda) <span class="text-rose-400">*</span>
+            </label>
+            <textarea
+              id="setting-static-qris"
+              rows="4"
+              class="glass-input w-full p-3 rounded-xl font-mono text-xs"
+              placeholder="0002010102112661..."
+            ></textarea>
+            <p class="text-[11px] text-slate-500 mt-1">
+              Ambil string QRIS statis dari aplikasi m-Banking Anda (BCA, ShopeePay, Nobu, dll) atau gunakan QR code scanner untuk mengekstrak stringnya.
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">
+              URL Webhook Callback (Opsional)
+            </label>
+            <input
+              type="url"
+              id="setting-webhook-url"
+              placeholder="https://tokoanda.com/api/payment-callback"
+              class="glass-input w-full px-3 py-2 rounded-xl text-xs"
+            />
+            <p class="text-[11px] text-slate-500 mt-1">
+              Endpoint ini akan otomatis di-POST ketika mutasi pembayaran lunas terverifikasi.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Secret Key Webhook</label>
+              <input type="text" id="setting-webhook-secret" class="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Durasi Kedaluwarsa (Menit)</label>
+              <input type="number" id="setting-expiry" value="15" min="1" max="1440" class="glass-input w-full px-3 py-2 rounded-xl text-xs" />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onclick="saveMerchantSettings()"
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-blue-600/20"
+          >
+            Simpan Pengaturan
+          </button>
+        </div>
+
+        <!-- Panduan & Integrasi API -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h2 class="text-sm font-bold text-white tracking-wide border-b border-slate-800 pb-3">
+            Panduan Integrasi REST API
+          </h2>
+
+          <div class="space-y-3 text-xs leading-relaxed text-slate-300">
+            <div>
+              <span class="font-bold text-white block">1. Buat Invoice dari Website Anda:</span>
+              <pre class="bg-slate-900 border border-slate-800 rounded-xl p-3 font-mono text-[11px] text-blue-300 mt-1 overflow-x-auto">curl -X POST https://your-pi-ip:8088/api/invoices \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 50000, "memo": "Order #123"}'</pre>
+            </div>
+
+            <div>
+              <span class="font-bold text-white block">2. Webhook Mutasi Masuk dari HP / Bot (MacroDroid / Tasker):</span>
+              <pre class="bg-slate-900 border border-slate-800 rounded-xl p-3 font-mono text-[11px] text-emerald-300 mt-1 overflow-x-auto">curl -X POST https://your-pi-ip:8088/api/mutations/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"bank": "BCA", "amount": 50231, "type": "CR"}'</pre>
+            </div>
+
+            <div>
+              <span class="font-bold text-white block">3. Callback Otomatis ke Toko Anda:</span>
+              <p class="text-slate-400 text-[11px]">
+                Engine ini akan mengirim payload JSON dengan header <code class="text-slate-200">X-QRIS-Engine-Secret</code> secara instan begitu nominal cocok.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-900 py-4 text-center text-xs text-slate-500">
+    QRIS Dynamic Engine &copy; 2026 &bull; Berjalan mandiri di Raspberry Pi &bull; Bebas biaya potongan transaksi
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+
